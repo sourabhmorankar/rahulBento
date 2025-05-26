@@ -26,10 +26,21 @@ This TODO covers the complete implementation of the Infinite Bento Grid Portfoli
   npm install firebase animejs
   ```
 
+- [X] **Initialise Firebases**
+  - Initialise Firebase Project in environment as well as in Firebase Console
+  - Enable Firestore Database (in testing mode initially)
+  - Enable Authentication with Google
+  - Setup Firebase Hosting
+  - Enable Cloud Storage for file uploads (in testing mode initially)
+
 - [X] **Setup Development Tools**
   - Use default ESLint with TypeScript rules which is given by SvelteKit cli
   - Use default Prettier with Svelte plugin which is given by SvelteKit cli
   - Edit `.gitignore` file as needed
+
+- [X] **Setup Version Control**
+  - Initialise Git repository
+  - Add initial commit 
 
 ### 1.2 Project Structure Creation
 - [ ] **Create Main Directory Structure**

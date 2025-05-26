@@ -21,3 +21,16 @@ Thumbs.db
 # Vite
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
+
+# Firebase
+firebase.json
+firestore.indexes.json
+firestore.rules
+storage.rules
+
+# Firebase Debug
+firebase-debug.log
+
+# AI Helpers
+PROJECT.md
+TODO.md
