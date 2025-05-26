@@ -1,9 +1,17 @@
 :root {
-  /* CSS Custom Properties for theming */
-  --grid-cell-size: clamp(80px, 8vw, 120px);
-  --grid-gap: clamp(8px, 1vw, 16px);
+  /* Grid System Variables */
+  --cell-size: clamp(80px, 8vw, 120px);
+  --gap: clamp(8px, 1vw, 16px);
+  --grid-origin-x: 0;
+  --grid-origin-y: 0;
+  --offset-x: 0px;
+  --offset-y: 0px;
+  
+  /* Animation Variables */
   --animation-duration: 350ms;
   --animation-easing: cubic-bezier(0.4, 0, 0.2, 1);
+  --animation-duration-fast: 200ms;
+  --animation-duration-slow: 500ms;
 
   /* Light theme (default) */
   --bg-primary: #ffffff;
