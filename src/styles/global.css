@@ -1,0 +1,14 @@
+@import './variables.css';
+@import './base.css';
+
+/* Theme-aware components */
+.thumbnail {
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+  box-shadow: 0 2px 8px var(--shadow-light);
+}
+
+.thumbnail:hover {
+  box-shadow: 0 8px 32px var(--shadow-medium);
+}

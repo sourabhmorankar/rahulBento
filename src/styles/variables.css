@@ -1,0 +1,46 @@
+:root {
+  /* CSS Custom Properties for theming */
+  --grid-cell-size: clamp(80px, 8vw, 120px);
+  --grid-gap: clamp(8px, 1vw, 16px);
+  --animation-duration: 350ms;
+  --animation-easing: cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* Light theme (default) */
+  --bg-primary: #ffffff;
+  --bg-secondary: #f8f9fa;
+  --bg-tertiary: #e9ecef;
+  --text-primary: #212529;
+  --text-secondary: #6c757d;
+  --text-tertiary: #adb5bd;
+  --accent-primary: #2196F3;
+  --accent-secondary: #1976D2;
+  --border-color: #dee2e6;
+  --shadow-light: rgba(0, 0, 0, 0.05);
+  --shadow-medium: rgba(0, 0, 0, 0.1);
+  --shadow-heavy: rgba(0, 0, 0, 0.15);
+}
+
+[data-theme="dark"] {
+  /* Dark theme overrides */
+  --bg-primary: #121212;
+  --bg-secondary: #1e1e1e;
+  --bg-tertiary: #2d2d2d;
+  --text-primary: #ffffff;
+  --text-secondary: #b3b3b3;
+  --text-tertiary: #8a8a8a;
+  --accent-primary: #64B5F6;
+  --accent-secondary: #42A5F5;
+  --border-color: #404040;
+  --shadow-light: rgba(0, 0, 0, 0.2);
+  --shadow-medium: rgba(0, 0, 0, 0.3);
+  --shadow-heavy: rgba(0, 0, 0, 0.4);
+}
+
+/* Smooth transitions during theme changes */
+.theme-transitioning,
+.theme-transitioning * {
+  transition: background-color 300ms ease,
+              color 300ms ease,
+              border-color 300ms ease,
+              box-shadow 300ms ease !important;
+}

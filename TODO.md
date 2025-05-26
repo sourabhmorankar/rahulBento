@@ -72,16 +72,6 @@ This TODO covers the complete implementation of the Infinite Bento Grid Portfoli
   - `package.json` scripts for development, build, and testing
 
 ### 1.3 Firebase Project Setup
-- [ ] **Create Firebase Project**
-  - Go to Firebase Console and create new project
-  - Enable Google Analytics (optional)
-  - Note down project ID and configuration
-
-- [ ] **Setup Firebase Services**
-  - Enable Firestore Database (in production mode initially)
-  - Enable Authentication with Google and GitHub providers
-  - Setup Firebase Hosting
-  - Enable Cloud Storage for file uploads
 
 - [ ] **Configure Firebase in Project**
   - Install Firebase CLI: `npm install -g firebase-tools`
@@ -90,10 +80,8 @@ This TODO covers the complete implementation of the Infinite Bento Grid Portfoli
   - Create `src/lib/firebase.ts` with configuration
   - Setup environment variables for Firebase config
 
-- [ ] **Create Firestore Security Rules**
-  - Copy security rules from PROJECT.md specification
-  - Test rules with Firebase Emulator
-  - Deploy initial rules
+- [ ] **Setup Firestore Security Rules**
+  - Implement rules for testing purposes only
 
 ---
 
