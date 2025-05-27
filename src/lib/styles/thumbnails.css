@@ -1,0 +1,92 @@
+.thumbnail {
+  position: absolute;
+  border-radius: 12px;
+  padding: 16px;
+  cursor: pointer;
+  transition: all var(--animation-duration, 0.3s) var(--animation-easing, ease);
+  overflow: hidden;
+  user-select: none;
+  z-index: 1;
+  
+  /* Default to content thumbnail styling */
+  background: var(--content-thumbnail-bg, #1a1a1a);
+  color: var(--content-thumbnail-text, #fff);
+  border: 1px solid var(--content-thumbnail-border, #333);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.thumbnail:hover {
+  transform: scale(1.02);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
+  border-color: var(--thumbnail-border-hover, #555);
+}
+
+.thumbnail:focus {
+  outline: 2px solid var(--focus-color, #4A90E2);
+  outline-offset: 2px;
+}
+
+/* Bio cluster thumbnails - white background */
+.thumbnail-bio,
+.thumbnail[data-thumbnail-type="bio"],
+.thumbnail[data-thumbnail-type^="bio-"] {
+  background: var(--bio-thumbnail-bg, #ffffff) !important;
+  color: var(--bio-thumbnail-text, #000000) !important;
+  border-color: var(--bio-thumbnail-border, #e0e0e0) !important;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12) !important;
+}
+
+.thumbnail[data-thumbnail-type="bio"] {
+  margin: var(--bio-thumbnail-gap, 4px); /* Smaller gap for bio thumbnails */
+}
+
+.bio-card {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.bio-card__header {
+  position: relative;
+  margin-bottom: 16px;
+}
+
+.bio-card__profile {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid var(--thumbnail-border, #333);
+}
+
+.bio-card__name {
+  font-size: 1.2rem;
+  font-weight: bold;
+  margin: 0 0 4px 0;
+}
+
+.bio-card__title {
+  font-size: 0.9rem;
+  color: var(--bio-text-secondary, #555);
+  margin: 0 0 8px 0;
+}
+
+/* Add some distinction to the bio cards */
+.bio-card {
+  background-color: var(--bio-thumbnail-bg, #ffffff);
+  color: var(--bio-thumbnail-text, #000000);
+}
+
+/* Apply content thumbnail styling explicitly */
+.thumbnail:not([data-thumbnail-type="bio"]):not([data-thumbnail-type^="bio-"]):not(.thumbnail-bio) {
+  background: var(--content-thumbnail-bg, #1a1a1a);
+  color: var(--content-thumbnail-text, #ffffff);
+  border-color: var(--content-thumbnail-border, #333333);
+}
+
+/* Fix potential overlap issues by ensuring proper z-index stacking */
+.thumbnail:hover {
+  z-index: 2;
+  transform: scale(1.02);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
+}

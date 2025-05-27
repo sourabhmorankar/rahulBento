@@ -1,73 +1,146 @@
 <script lang="ts">
-  import { onMount, onDestroy, afterUpdate } from 'svelte';
+  import { onMount, onDestroy } from 'svelte';
   import { Grid } from '$lib/grid';
-  import type { GridItem } from '$lib/grid/VirtualGrid';
+  import { 
+    ThumbnailFactory, 
+    registerThumbnailTypes,
+    ThumbnailDistribution,
+    BIO_CLUSTER_LAYOUT,
+    type Thumbnail
+  } from '$lib/thumbnails';
+  import { 
+    sampleBioData, 
+    sampleSkillsData, 
+    sampleExperienceData, 
+    samplePhotoBoothData, 
+    sampleJourneyData,
+    sampleBlogArticles
+  } from '$lib/data/sampleData';
+  import { sampleCaseStudies, sampleTestimonials } from '$lib/data/contentData';
   
   let gridContainer: HTMLElement;
   let grid: Grid | null = null;
-  let visibleItems: GridItem[] = [];
+  let allThumbnails: Thumbnail[] = [];
+  let visibleThumbnails: Thumbnail[] = [];
   let position = { x: 0, y: 0 };
-  let offsetX = 0;
-  let offsetY = 0;
   
-  // Sample grid items for demonstration
-  const gridItems: GridItem[] = [
-    { id: 'center', gridX: 0, gridY: 0, spanX: 2, spanY: 2 },
-    { id: 'item1', gridX: 3, gridY: 0, spanX: 1, spanY: 1 },
-    { id: 'item2', gridX: 3, gridY: 2, spanX: 1, spanY: 1 },
-    { id: 'item3', gridX: 0, gridY: 3, spanX: 1, spanY: 1 },
-    { id: 'item4', gridX: -3, gridY: 0, spanX: 1, spanY: 1 },
-    { id: 'item5', gridX: -3, gridY: -2, spanX: 1, spanY: 1 },
-    { id: 'item6', gridX: 0, gridY: -3, spanX: 1, spanY: 1 },
-    // Add more items in a spiral pattern
-    { id: 'item7', gridX: 5, gridY: -2, spanX: 1, spanY: 1 },
-    { id: 'item8', gridX: -5, gridY: 2, spanX: 1, spanY: 1 },
-    { id: 'item9', gridX: 2, gridY: 5, spanX: 1, spanY: 1 },
-    { id: 'item10', gridX: -2, gridY: -5, spanX: 1, spanY: 1 },
-  ];
+  registerThumbnailTypes();
   
-  // Update CSS variables when position changes
+  // Create bio cluster thumbnails
+  const bioThumbnails = [
+    ThumbnailFactory.createThumbnail({
+      id: 'bio-card',
+      type: 'bio',
+      gridX: 0.5,
+      gridY: 0.5,
+      content: sampleBioData
+    }),
+    ThumbnailFactory.createThumbnail({
+      id: 'skills',
+      type: 'skills',
+      gridX: -2.5,
+      gridY: -1.5,
+      content: sampleSkillsData
+    }),
+    ThumbnailFactory.createThumbnail({
+      id: 'experience',
+      type: 'experience',
+      gridX: 3.5,
+      gridY: -0.5,
+      content: sampleExperienceData
+    }),
+    ThumbnailFactory.createThumbnail({
+      id: 'photoBooth',
+      type: 'photoBooth',
+      gridX: 3.5,
+      gridY: 3.5,
+      content: samplePhotoBoothData
+    }),
+    ThumbnailFactory.createThumbnail({
+      id: 'journey',
+      type: 'journey',
+      gridX: -2.5,
+      gridY: 1.5,
+      content: sampleJourneyData
+    })
+  ];  
+  // Create content thumbnails
+  const contentThumbnails: Thumbnail[] = [];
+  
+  // Add blog article thumbnails
+  sampleBlogArticles.forEach((article, index) => {
+    contentThumbnails.push(
+      ThumbnailFactory.createThumbnail({
+        id: `blog-${index}`,
+        type: 'blogArticle',
+        gridX: 0, // Will be repositioned by distribution algorithm
+        gridY: 0,
+        content: article
+      })
+    );
+  });
+  
+  // Add case study thumbnails
+  sampleCaseStudies.forEach((caseStudy, index) => {
+    contentThumbnails.push(
+      ThumbnailFactory.createThumbnail({
+        id: `case-study-${index}`,
+        type: 'caseStudy',
+        gridX: 0, // Will be repositioned by distribution algorithm
+        gridY: 0,
+        content: caseStudy
+      })
+    );
+  });
+  
+  // Add testimonial thumbnails
+  sampleTestimonials.forEach((testimonial, index) => {
+    contentThumbnails.push(
+      ThumbnailFactory.createThumbnail({
+        id: `testimonial-${index}`,
+        type: 'testimonial',
+        gridX: 0, // Will be repositioned by distribution algorithm
+        gridY: 0,
+        content: testimonial
+      })
+    );
+  });
+  
+  // Use distribution algorithm to position content thumbnails around bio cluster
+  const distribution = new ThumbnailDistribution(BIO_CLUSTER_LAYOUT, contentThumbnails);
+  const distributedContent = distribution.distributeContent();
+  
+  // Combine bio cluster and distributed content
+  allThumbnails = [...bioThumbnails, ...distributedContent];
+  
   $: {
     if (typeof document !== 'undefined') {
-      offsetX = position.x;
-      offsetY = position.y;
-      document.documentElement.style.setProperty('--offset-x', `${offsetX}px`);
-      document.documentElement.style.setProperty('--offset-y', `${offsetY}px`);
+      document.documentElement.style.setProperty('--offset-x', `${position.x}px`);
+      document.documentElement.style.setProperty('--offset-y', `${position.y}px`);
     }
-  }
-  
+  }  
   onMount(() => {
     if (gridContainer) {
-      // Set initial CSS variables
-      document.documentElement.style.setProperty('--offset-x', '0px');
-      document.documentElement.style.setProperty('--offset-y', '0px');
-      
       grid = new Grid({
         element: gridContainer,
-        items: gridItems,
+        items: allThumbnails,
         initialPosition: { x: 0, y: 0 },
         enableKeyboardNavigation: true,
         onItemVisibilityChange: (items) => {
-          visibleItems = items;
+          visibleThumbnails = items.filter(item => 
+            allThumbnails.find(t => t.id === item.id)
+          ) as Thumbnail[];
         },
         onPositionChange: (pos) => {
           position = pos;
-        },
-        onItemFocus: (itemId) => {
-          console.log('Item focused:', itemId);
-        },
+        }
       });
       
-      // Center the grid initially
       setTimeout(() => {
         if (grid) {
           const viewportWidth = window.innerWidth;
           const viewportHeight = window.innerHeight;
-          grid.setPosition(
-            -viewportWidth / 2,
-            -viewportHeight / 2,
-            false
-          );
+          grid.setPosition(-viewportWidth / 2, -viewportHeight / 2, false);
         }
       }, 100);
     }
@@ -79,47 +152,51 @@
     }
   });
   
-  function navigateToItem(id: string) {
+  function navigateToThumbnail(id: string) {
     if (grid) {
       grid.navigateToItem(id, true);
     }
   }
+  
+  function renderThumbnail(thumbnail: Thumbnail) {
+    return thumbnail.render();
+  }
 </script>
 
 <div class="grid-container" bind:this={gridContainer}>
-  {#each visibleItems as item (item.id)}
+  {#each visibleThumbnails as thumbnail (thumbnail.id)}
     <button 
       type="button"
-      class="grid-item"
-      data-item-id={item.id}
+      class="thumbnail thumbnail-{thumbnail.type}"
+      data-thumbnail-id={thumbnail.id}
       style="
-        --grid-x: {item.gridX};
-        --grid-y: {item.gridY};
-        --span-x: {item.spanX};
-        --span-y: {item.spanY};
+        --grid-x: {thumbnail.gridX};
+        --grid-y: {thumbnail.gridY};
+        --span-x: {thumbnail.spanX};
+        --span-y: {thumbnail.spanY};
       "
-      on:click={() => navigateToItem(item.id)}
-      on:keydown={(e) => e.key === 'Enter' && navigateToItem(item.id)}
-      aria-label="Navigate to item {item.id}"
+      on:click={() => navigateToThumbnail(thumbnail.id)}
+      on:keydown={(e) => e.key === 'Enter' && navigateToThumbnail(thumbnail.id)}
+      aria-label="View {thumbnail.id} content"
     >
-      <div class="item-content">
-        <h3>{item.id}</h3>
-        <p>Position: ({item.gridX}, {item.gridY})</p>
-        <p>Size: {item.spanX}x{item.spanY}</p>
-      </div>
+      {@html renderThumbnail(thumbnail)}
     </button>
   {/each}
 </div>
-
-<div class="controls">
-  <div class="position-info">
-    <p>Scroll Position: ({Math.round(position.x)}, {Math.round(position.y)})</p>
-  </div>
-  <div class="navigation">
-    <button on:click={() => navigateToItem('center')}>Center</button>
-    {#each gridItems.filter(item => item.id !== 'center') as item}
-      <button on:click={() => navigateToItem(item.id)}>{item.id}</button>
-    {/each}
+<div class="info-panel">
+  <div class="info-content">
+    <h2>Infinite Bento Grid Portfolio</h2>
+    <p>Explore the interactive portfolio grid. Use mouse or touch to navigate.</p>
+    <div class="thumbnail-count">
+      Showing {visibleThumbnails.length} of {allThumbnails.length} thumbnails
+    </div>
+    <div class="quick-nav">
+      <button on:click={() => navigateToThumbnail('bio-card')}>Bio</button>
+      <button on:click={() => navigateToThumbnail('skills')}>Skills</button>
+      <button on:click={() => navigateToThumbnail('experience')}>Experience</button>
+      <button on:click={() => navigateToThumbnail('photoBooth')}>Photos</button>
+      <button on:click={() => navigateToThumbnail('journey')}>Journey</button>
+    </div>
   </div>
 </div>
 
@@ -133,7 +210,7 @@
     overflow: hidden;
   }
   
-  .grid-item {
+  .thumbnail {
     position: absolute;
     transform: translate(
       calc((var(--grid-x) * (var(--cell-size) + var(--gap))) - var(--offset-x, 0px)),
@@ -141,81 +218,181 @@
     );
     width: calc(var(--span-x) * var(--cell-size) + (var(--span-x) - 1) * var(--gap));
     height: calc(var(--span-y) * var(--cell-size) + (var(--span-y) - 1) * var(--gap));
+    background: var(--thumbnail-bg, #1a1a1a);
+    border-radius: 12px;
+    border: 1px solid var(--thumbnail-border, #333);
+    padding: 16px;
+    color: var(--thumbnail-text, #fff);
     cursor: pointer;
+    transition: all var(--animation-duration, 0.3s) var(--animation-easing, ease);
+    overflow: hidden;
+    user-select: none;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   }
   
-  .grid-item:hover {
+  .thumbnail:hover {
     transform: translate(
       calc((var(--grid-x) * (var(--cell-size) + var(--gap))) - var(--offset-x, 0px)),
       calc((var(--grid-y) * (var(--cell-size) + var(--gap))) - var(--offset-y, 0px))
     ) scale(1.02);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
+    border-color: var(--thumbnail-border-hover, #555);
   }
   
-  .item-content {
-    padding: 16px;
+  .thumbnail:focus {
+    outline: 2px solid var(--focus-color, #4A90E2);
+    outline-offset: 2px;
+  }
+  .info-panel {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: rgba(26, 26, 26, 0.95);
+    border: 1px solid #333;
+    border-radius: 12px;
+    padding: 20px;
     color: white;
-    height: 100%;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    text-align: center;
+    backdrop-filter: blur(10px);
+    z-index: 100;
+    max-width: 280px;
   }
   
-  .item-content h3 {
+  .info-panel h2 {
     margin: 0 0 8px 0;
-    font-size: 1.2rem;
+    font-size: 1.1rem;
+    color: #4A90E2;
   }
   
-  .item-content p {
-    margin: 4px 0;
-    font-size: 0.9rem;
+  .info-panel p {
+    margin: 0 0 12px 0;
+    font-size: 0.85rem;
     opacity: 0.8;
   }
   
-  .controls {
-    position: fixed;
-    bottom: 20px;
-    left: 50%;
-    transform: translateX(-50%);
-    background-color: rgba(0, 0, 0, 0.7);
-    padding: 12px 20px;
-    border-radius: 8px;
-    color: white;
-    z-index: 10;
+  .thumbnail-count {
+    font-size: 0.8rem;
+    opacity: 0.7;
+    margin-bottom: 12px;
+  }
+  
+  .quick-nav {
     display: flex;
-    flex-direction: column;
-    align-items: center;
-  }
-  
-  .position-info {
-    margin-bottom: 10px;
-  }
-  
-  .position-info p {
-    margin: 0;
-    font-size: 0.9rem;
-  }
-  
-  .navigation {
-    display: flex;
-    gap: 8px;
     flex-wrap: wrap;
-    justify-content: center;
+    gap: 6px;
   }
   
-  button {
-    background-color: #4a4a4a;
+  .quick-nav button {
+    background: #333;
     color: white;
     border: none;
-    border-radius: 4px;
-    padding: 6px 12px;
+    border-radius: 6px;
+    padding: 4px 8px;
+    font-size: 0.75rem;
     cursor: pointer;
-    font-size: 0.9rem;
     transition: background-color 0.2s;
   }
   
-  button:hover {
-    background-color: #5a5a5a;
+  .quick-nav button:hover {
+    background: #4A90E2;
+  }
+
+  /* Bio card styles */
+  :global(.bio-card) {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+  }
+
+  :global(.bio-card__header) {
+    position: relative;
+    margin-bottom: 16px;
+  }
+
+  :global(.bio-card__profile) {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 3px solid var(--thumbnail-border, #333);
+  }
+  :global(.bio-card__status) {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    border: 2px solid var(--thumbnail-bg, #1a1a1a);
+  }
+
+  :global(.bio-card__status.available) { background: #4CAF50; }
+  :global(.bio-card__status.busy) { background: #FF9800; }
+  :global(.bio-card__status.away) { background: #757575; }
+
+  :global(.bio-card__name) {
+    font-size: 1.2rem;
+    font-weight: bold;
+    margin: 0 0 4px 0;
+  }
+
+  :global(.bio-card__title) {
+    font-size: 0.9rem;
+    color: var(--text-secondary, #ccc);
+    margin: 0 0 8px 0;
+  }
+
+  :global(.bio-card__description) {
+    font-size: 0.8rem;
+    line-height: 1.4;
+    margin: 0 0 16px 0;
+    flex: 1;
+  }
+
+  :global(.bio-card__meta) {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    font-size: 0.7rem;
+    color: var(--text-tertiary, #999);
+  }
+
+  /* Skills thumbnail styles */
+  :global(.skills-thumbnail__title) {
+    font-size: 1rem;
+    margin: 0 0 12px 0;
+    color: #4A90E2;
+  }
+
+  :global(.skill-category__name) {
+    font-size: 0.8rem;
+    margin: 0 0 6px 0;
+    color: #ccc;
+  }
+
+  :global(.skill) {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 4px;
+  }
+
+  :global(.skill__name) {
+    font-size: 0.75rem;
+  }
+
+  :global(.skill__level) {
+    display: flex;
+    gap: 2px;
+  }
+
+  :global(.skill__dot) {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #333;
+  }
+
+  :global(.skill__dot.active) {
+    background: #4A90E2;
   }
 </style>

@@ -1,7 +1,7 @@
 :root {
   /* Grid System Variables */
   --cell-size: clamp(80px, 8vw, 120px);
-  --gap: clamp(8px, 1vw, 16px);
+  --gap: 2px;
   --grid-origin-x: 0;
   --grid-origin-y: 0;
   --offset-x: 0px;
@@ -26,6 +26,16 @@
   --shadow-light: rgba(0, 0, 0, 0.05);
   --shadow-medium: rgba(0, 0, 0, 0.1);
   --shadow-heavy: rgba(0, 0, 0, 0.15);
+  
+  /* Thumbnail specific variables */
+  --bio-thumbnail-bg: #ffffff;
+  --bio-thumbnail-text: #212529;
+  --bio-thumbnail-border: #e0e0e0;
+  --bio-text-secondary: #6c757d;
+  --content-thumbnail-bg: #1a1a1a;
+  --content-thumbnail-text: #ffffff;
+  --content-thumbnail-border: #333333;
+  --content-text-secondary: #b3b3b3;
 }
 
 [data-theme="dark"] {
@@ -42,6 +52,16 @@
   --shadow-light: rgba(0, 0, 0, 0.2);
   --shadow-medium: rgba(0, 0, 0, 0.3);
   --shadow-heavy: rgba(0, 0, 0, 0.4);
+  
+  /* Thumbnail specific variables in dark mode - bio cluster still stays light */
+  --bio-thumbnail-bg: #ffffff;
+  --bio-thumbnail-text: #212529;
+  --bio-thumbnail-border: #e0e0e0;
+  --bio-text-secondary: #6c757d;
+  --content-thumbnail-bg: #1a1a1a;
+  --content-thumbnail-text: #ffffff;
+  --content-thumbnail-border: #333333;
+  --content-text-secondary: #b3b3b3;
 }
 
 /* Smooth transitions during theme changes */

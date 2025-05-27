@@ -12,6 +12,7 @@ node_modules
 .DS_Store
 Thumbs.db
 
+
 # Env
 .env
 .env.*
@@ -32,3 +33,7 @@ storage.rules
 firebase-debug.log
 
 # AI Helpers
+
+
+# Lock files
+package-lock.json

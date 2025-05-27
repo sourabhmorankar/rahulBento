@@ -1,7 +1,7 @@
 export const GRID_CONFIG = {
   cellSize: 120, // Base cell size in pixels
-  gap: 16, // Gap between cells
-  origin: { x: 0, y: 0 }, // Bio card center position
+  gap: 16, // Uniform 1rem gap between all cells
+  origin: { x: 0, y: 0 }, // Bio card center position, adjusted for half-grid margin
   maxDistance: 50, // Maximum cells from origin (prevents infinite scroll)
   snapThreshold: 0.3, // Snap to grid when within 30% of cell size
   renderBuffer: 2, // Number of cells to render beyond viewport
@@ -9,6 +9,7 @@ export const GRID_CONFIG = {
   friction: 0.92, // Friction coefficient for momentum scrolling
   minVelocity: 0.1, // Minimum velocity before stopping
   maxVelocity: 50, // Maximum velocity cap
+  bioClusterMargin: 0.5 // Half grid cell margin around the bio cluster
 }
 
 export function gridToPixel(gridX: number, gridY: number) {

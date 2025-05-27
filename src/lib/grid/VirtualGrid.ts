@@ -1,4 +1,5 @@
 import { GRID_CONFIG, calculateViewportGridCells, gridToPixel } from './config'
+import type { Thumbnail } from '../thumbnails/Thumbnail'
 
 export interface GridItem {
   id: string
@@ -11,6 +12,8 @@ export interface GridItem {
   priority?: number
 }
 
+export type GridEntity = GridItem | Thumbnail
+
 export interface Viewport {
   width: number
   height: number
@@ -18,62 +21,97 @@ export interface Viewport {
 
 export class VirtualGrid {
   private viewport: Viewport
-  private items: Map<string, GridItem>
-  private visibleItems: Set<string>
+  private entities: Map<string, GridEntity>
+  private visibleEntities: Set<string>
   private scrollPosition: { x: number, y: number }
   
-  constructor(viewport: Viewport, items: GridItem[] = []) {
+  constructor(viewport: Viewport, entities: GridEntity[] = []) {
     this.viewport = viewport
-    this.items = new Map()
-    this.visibleItems = new Set()
+    this.entities = new Map()
+    this.visibleEntities = new Set()
     this.scrollPosition = { x: 0, y: 0 }
     
-    items.forEach(item => this.addItem(item))
+    entities.forEach(entity => this.addEntity(entity))
   }
   
+  addEntity(entity: GridEntity) {
+    if (this.isThumbnail(entity)) {
+      this.entities.set(entity.id, entity)
+      entity.setVisibility(false)
+    } else {
+      this.entities.set(entity.id, {
+        ...entity,
+        isVisible: false,
+        isLoaded: false,
+        priority: this.calculateEntityPriority(entity)
+      })
+    }
+  }
+  
+  removeEntity(id: string) {
+    const entity = this.entities.get(id)
+    if (entity && this.isThumbnail(entity)) {
+      entity.setVisibility(false)
+    }
+    this.entities.delete(id)
+    this.visibleEntities.delete(id)
+  }
+  
+  getEntity(id: string) {
+    return this.entities.get(id)
+  }
+  
+  getAllEntities() {
+    return Array.from(this.entities.values())
+  }
+  
+  getVisibleEntities() {
+    return Array.from(this.visibleEntities)
+      .map(id => this.entities.get(id))
+      .filter((entity): entity is GridEntity => entity !== undefined)
+  }
+
+  // Legacy methods for backward compatibility
   addItem(item: GridItem) {
-    this.items.set(item.id, {
-      ...item,
-      isVisible: false,
-      isLoaded: false,
-      priority: this.calculateItemPriority(item)
-    })
+    this.addEntity(item)
   }
   
   removeItem(id: string) {
-    this.items.delete(id)
-    this.visibleItems.delete(id)
+    this.removeEntity(id)
   }
   
   getItem(id: string) {
-    return this.items.get(id)
+    return this.getEntity(id)
   }
   
   getAllItems() {
-    return Array.from(this.items.values())
+    return this.getAllEntities()
   }
   
   getVisibleItems() {
-    return Array.from(this.visibleItems)
-      .map(id => this.items.get(id))
-      .filter((item): item is GridItem => item !== undefined)
+    return this.getVisibleEntities()
   }
   
   updateViewport(width: number, height: number) {
     this.viewport = { width, height }
-    this.updateVisibleItems()
+    this.updateVisibleEntities()
   }
   
   updateScrollPosition(x: number, y: number) {
     this.scrollPosition = { x, y }
-    this.updateVisibleItems()
+    this.updateVisibleEntities()
   }
   
+  getEntitiesToRender() {
+    return this.getVisibleEntities().sort((a, b) => this.getPriority(b) - this.getPriority(a))
+  }
+
+  // Legacy method for backward compatibility
   getItemsToRender() {
-    return this.getVisibleItems().sort((a, b) => (b.priority || 0) - (a.priority || 0))
+    return this.getEntitiesToRender()
   }
   
-  private updateVisibleItems() {
+  private updateVisibleEntities() {
     const { startX, endX, startY, endY } = calculateViewportGridCells(
       this.viewport.width,
       this.viewport.height,
@@ -81,44 +119,70 @@ export class VirtualGrid {
       this.scrollPosition.y
     )
     
-    this.visibleItems.clear()
+    this.visibleEntities.clear()
     
-    this.items.forEach((item, id) => {
-      const itemEndX = item.gridX + item.spanX - 1
-      const itemEndY = item.gridY + item.spanY - 1
+    this.entities.forEach((entity, id) => {
+      const itemEndX = entity.gridX + entity.spanX - 1
+      const itemEndY = entity.gridY + entity.spanY - 1
       
       const isVisible = 
-        item.gridX <= endX && itemEndX >= startX &&
-        item.gridY <= endY && itemEndY >= startY
+        entity.gridX <= endX && itemEndX >= startX &&
+        entity.gridY <= endY && itemEndY >= startY
       
-      this.items.set(id, { ...item, isVisible })
+      if (this.isThumbnail(entity)) {
+        entity.setVisibility(isVisible)
+      } else {
+        this.entities.set(id, { ...entity, isVisible })
+      }
       
       if (isVisible) {
-        this.visibleItems.add(id)
+        this.visibleEntities.add(id)
       }
     })
   }
   
-  private calculateItemPriority(item: GridItem) {
+  private calculateEntityPriority(entity: GridEntity) {
+    if (this.isThumbnail(entity)) {
+      return entity.priority
+    }
+    
     const distance = Math.sqrt(
-      Math.pow(item.gridX - GRID_CONFIG.origin.x, 2) + 
-      Math.pow(item.gridY - GRID_CONFIG.origin.y, 2)
+      Math.pow(entity.gridX - GRID_CONFIG.origin.x, 2) + 
+      Math.pow(entity.gridY - GRID_CONFIG.origin.y, 2)
     )
     
     return Math.max(0, 100 - distance)
   }
+
+  // Legacy method for backward compatibility  
+  private calculateItemPriority(item: GridItem) {
+    return this.calculateEntityPriority(item)
+  }
+
+  private isThumbnail(entity: GridEntity): entity is Thumbnail {
+    return 'render' in entity && typeof entity.render === 'function'
+  }
+
+  private getPriority(entity: GridEntity): number {
+    return this.isThumbnail(entity) ? entity.priority : (entity.priority || 0)
+  }
   
-  getItemPixelPosition(id: string) {
-    const item = this.items.get(id)
-    if (!item) return null
+  getEntityPixelPosition(id: string) {
+    const entity = this.entities.get(id)
+    if (!entity) return null
     
-    const { x, y } = gridToPixel(item.gridX, item.gridY)
+    const { x, y } = gridToPixel(entity.gridX, entity.gridY);
     
     return {
       x,
       y,
-      width: item.spanX * GRID_CONFIG.cellSize + (item.spanX - 1) * GRID_CONFIG.gap,
-      height: item.spanY * GRID_CONFIG.cellSize + (item.spanY - 1) * GRID_CONFIG.gap
+      width: entity.spanX * GRID_CONFIG.cellSize + (entity.spanX - 1) * GRID_CONFIG.gap,
+      height: entity.spanY * GRID_CONFIG.cellSize + (entity.spanY - 1) * GRID_CONFIG.gap
     }
+  }
+
+  // Legacy method for backward compatibility
+  getItemPixelPosition(id: string) {
+    return this.getEntityPixelPosition(id)
   }
 }
